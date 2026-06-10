@@ -43,7 +43,29 @@ def preprocess(df):
 
     # Apply cleaning
     df["cleaned_message"] = df["Message"].apply(preprocess_text)
-    print("1")
+
+    # Create additional features
+    df["message_length"] = df["Message"].apply(len)
+    df["word_count"] = df["Message"].apply(lambda x: len(x.split()))
+    df["has_currency"] = df["Message"].apply(
+        lambda x: 1 if re.search(r"[$£€¥]", x) else 0
+    )
+    df["has_numbers"] = df["Message"].apply(lambda x: 1 if re.search(r"\d", x) else 0)
+    df["has_special_chars"] = df["Message"].apply(
+        lambda x: 1 if re.search(r"[!@#$%^&*()]", x) else 0
+    )
+    df["has_urgent_words"] = df["Message"].apply(
+        lambda x: (
+            1
+            if re.search(r"\b(urgent|free|prize|winner|cash|guarantee)\b", x.lower())
+            else 0
+        )
+    )
+    # Convert categorical labels to numerical
+    df["label"] = df["Category"].map({"ham": 0, "spam": 1})
+
+    print("\nColumn names:")
+    print(df.columns)
     print(df.head())
 
     return df
