@@ -1,0 +1,62 @@
+name: Preprocess Data
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  RAW_DATASET_URL: "./email_raw.csv"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      # Check-out your repo under $GITHUB_WORKSPACE
+      - uses: actions/checkout@v3
+
+      # Setup python 3.12.11
+      - name: Set up Python 3.12.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12.11"
+
+      # Check env var
+      - name: Check env
+        run: |
+          echo $RAW_DATASET_URL
+
+      # Install deps
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade pandas nltk
+
+      # Run preprocess
+      - name: Run preprocess script
+        run: |
+          cd preprocessing
+          python automate_Gerti-Armanda-Sembiring.py
+
+      # Save email_preprocess to github repo
+      - name: Set up Git LFS
+        run: |
+          git config --global user.name "github-actopns[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Setup LFS
+          git lfs install
+          git lfs track "preprocess/email_preprocess"
+          git add .gitattributes
+
+          git add preprocessing/email_preprocessing.csv
+
+          git commit -m "Automate preprocess [skip ci]" || echo "No changes to commit"
+          git push origin main
